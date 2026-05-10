@@ -1,0 +1,400 @@
+import { useState, useEffect } from "react";
+
+const COLORS = {
+  bg: "#0a0f1e",
+  card: "#111827",
+  cardBorder: "#1e2d45",
+  accent: "#f59e0b",
+  accentSoft: "#fbbf24",
+  green: "#10b981",
+  red: "#ef4444",
+  blue: "#3b82f6",
+  purple: "#8b5cf6",
+  text: "#f1f5f9",
+  muted: "#64748b",
+  highlight: "#1e3a5f",
+};
+
+const Section = ({ title, color = COLORS.accent, children }) => (
+  <div style={{
+    background: COLORS.card,
+    border: `1px solid ${COLORS.cardBorder}`,
+    borderRadius: 12,
+    padding: "20px",
+    marginBottom: 16,
+    borderLeft: `4px solid ${color}`,
+  }}>
+    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color, textTransform: "uppercase", marginBottom: 12 }}>{title}</div>
+    {children}
+  </div>
+);
+
+const Stat = ({ label, value, sub, color = COLORS.accent }) => (
+  <div style={{ textAlign: "center" }}>
+    <div style={{ fontSize: 26, fontWeight: 800, color, fontVariantNumeric: "tabular-nums" }}>{value}</div>
+    <div style={{ fontSize: 12, color: COLORS.text, fontWeight: 600 }}>{label}</div>
+    {sub && <div style={{ fontSize: 11, color: COLORS.muted }}>{sub}</div>}
+  </div>
+);
+
+const Row = ({ label, value, highlight, note }) => (
+  <div style={{
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    padding: "10px 12px",
+    background: highlight ? COLORS.highlight : "transparent",
+    borderRadius: 8,
+    marginBottom: 4,
+    border: highlight ? `1px solid ${COLORS.blue}33` : "1px solid transparent",
+  }}>
+    <div>
+      <div style={{ fontSize: 13, color: COLORS.text }}>{label}</div>
+      {note && <div style={{ fontSize: 11, color: COLORS.muted }}>{note}</div>}
+    </div>
+    <div style={{ fontSize: 14, fontWeight: 700, color: highlight ? COLORS.accentSoft : COLORS.text }}>{value}</div>
+  </div>
+);
+
+const Badge = ({ text, color }) => (
+  <span style={{
+    background: color + "22", color, border: `1px solid ${color}44`,
+    borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 700, marginLeft: 8
+  }}>{text}</span>
+);
+
+const formatTTD = (n) => `$${Math.round(n).toLocaleString()}`;
+
+export default function App() {
+  const [fyc, setFyc] = useState(5000);
+  const [renewals2yr, setRenewals2yr] = useState(8000);
+  const [renewals3yr, setRenewals3yr] = useState(6000);
+  const [livesTarget, setLivesTarget] = useState(80);
+  const [trailing12, setTrailing12] = useState(52500);
+  const [tab, setTab] = useState("calculator");
+
+  // Monthly Incentive Bonus
+  const monthlyBonusEligible = fyc + renewals2yr + renewals3yr;
+  const hitMonthlyThreshold = monthlyBonusEligible >= 35000;
+  const monthlyIncentiveBonus = hitMonthlyThreshold
+    ? (fyc * 0.15 + renewals2yr * 1.0 + renewals3yr * 1.0)
+    : 0;
+
+  // Volume Bonus (applied to FYC quarterly)
+  const volumeRate = trailing12 >= 77000 ? 0.20 : trailing12 >= 52500 ? 0.15 : 0;
+  const volumeBonus = fyc * volumeRate;
+
+  // Lives Bonus (annual — shown as monthly equivalent)
+  const livesRate = livesTarget >= 120 ? 0.20 : livesTarget >= 80 ? 0.15 : 0;
+  // Lives bonus = livesRate × full year FYC. Shown as monthly contribution.
+  const annualFYC = fyc * 12;
+  const livesBonus = annualFYC * livesRate;
+  const livesBonusMonthly = livesBonus / 12;
+
+  const totalMonthly = fyc + renewals2yr + renewals3yr + monthlyIncentiveBonus + volumeBonus + livesBonusMonthly;
+
+  const tabs = ["calculator", "strategy", "replacements"];
+
+  return (
+    <div style={{
+      background: COLORS.bg,
+      minHeight: "100vh",
+      fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+      color: COLORS.text,
+      padding: "0 0 40px",
+    }}>
+      {/* Header */}
+      <div style={{
+        background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
+        borderBottom: `1px solid ${COLORS.cardBorder}`,
+        padding: "24px 20px 20px",
+      }}>
+        <div style={{ fontSize: 10, letterSpacing: 3, color: COLORS.muted, textTransform: "uppercase", marginBottom: 4 }}>
+          Xperience Finance
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.text }}>
+          Commission Optimizer
+        </div>
+        <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>
+          Maximize your earnings across all bonus tiers
+        </div>
+      </div>
+
+      {/* Tab Nav */}
+      <div style={{ display: "flex", gap: 4, padding: "12px 20px 0", borderBottom: `1px solid ${COLORS.cardBorder}` }}>
+        {tabs.map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{
+            background: tab === t ? COLORS.accent : "transparent",
+            color: tab === t ? "#000" : COLORS.muted,
+            border: "none", borderRadius: "8px 8px 0 0",
+            padding: "8px 16px", fontSize: 12, fontWeight: 700,
+            cursor: "pointer", textTransform: "capitalize", letterSpacing: 0.5,
+          }}>
+            {t === "calculator" ? "💰 Calculator" : t === "strategy" ? "🎯 Strategy" : "🔄 Replacements"}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ padding: "20px 20px 0" }}>
+
+        {/* CALCULATOR TAB */}
+        {tab === "calculator" && (
+          <>
+            {/* Input Sliders */}
+            <Section title="Your Monthly Inputs" color={COLORS.blue}>
+              {[
+                { label: "First Year Commission (FYC)", key: "fyc", val: fyc, set: setFyc, max: 50000, color: COLORS.accent },
+                { label: "2nd Year Renewal Income", key: "r2", val: renewals2yr, set: setRenewals2yr, max: 30000, color: COLORS.green },
+                { label: "3rd Year Renewal Income", key: "r3", val: renewals3yr, set: setRenewals3yr, max: 30000, color: COLORS.purple },
+              ].map(({ label, val, set, max, color }) => (
+                <div key={label} style={{ marginBottom: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <span style={{ fontSize: 12, color: COLORS.text }}>{label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color }}>{formatTTD(val)}</span>
+                  </div>
+                  <input type="range" min={0} max={max} step={500} value={val}
+                    onChange={e => set(Number(e.target.value))}
+                    style={{ width: "100%", accentColor: color, height: 4 }}
+                  />
+                </div>
+              ))}
+
+              <div style={{ borderTop: `1px solid ${COLORS.cardBorder}`, paddingTop: 12, marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>
+                  Trailing 12-Month Commission Total <span style={{ color: COLORS.muted }}>(for Volume Bonus)</span>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {[0, 52500, 77000].map(v => (
+                    <button key={v} onClick={() => setTrailing12(v)} style={{
+                      background: trailing12 === v ? COLORS.blue : COLORS.highlight,
+                      color: COLORS.text, border: "none", borderRadius: 8,
+                      padding: "6px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                    }}>
+                      {v === 0 ? "Below $52.5k" : v === 52500 ? "$52,500+" : "$77,000+"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ borderTop: `1px solid ${COLORS.cardBorder}`, paddingTop: 12, marginTop: 12 }}>
+                <div style={{ fontSize: 12, color: COLORS.text, marginBottom: 6 }}>
+                  Lives Target This Year <span style={{ color: COLORS.muted }}>(new policies)</span>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[0, 80, 120].map(v => (
+                    <button key={v} onClick={() => setLivesTarget(v)} style={{
+                      background: livesTarget === v ? COLORS.green : COLORS.highlight,
+                      color: COLORS.text, border: "none", borderRadius: 8,
+                      padding: "6px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                    }}>
+                      {v === 0 ? "Under 80" : `${v}+ Lives`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </Section>
+
+            {/* Breakdown */}
+            <Section title="Monthly Earnings Breakdown" color={COLORS.accent}>
+              <Row label="First Year Commissions" value={formatTTD(fyc)} />
+              <Row label="2nd Year Renewals" value={formatTTD(renewals2yr)} />
+              <Row label="3rd Year Renewals" value={formatTTD(renewals3yr)} />
+
+              <div style={{ height: 1, background: COLORS.cardBorder, margin: "8px 0" }} />
+
+              <Row
+                label="Monthly Incentive Bonus"
+                note={hitMonthlyThreshold ? `✅ Threshold met ($${monthlyBonusEligible.toLocaleString()} ≥ $35,000)` : `⚠️ Need ${formatTTD(35000 - monthlyBonusEligible)} more to unlock`}
+                value={hitMonthlyThreshold ? formatTTD(monthlyIncentiveBonus) : "$0"}
+                highlight={hitMonthlyThreshold}
+              />
+              <Row
+                label={`Volume Bonus (${volumeRate * 100}% on FYC)`}
+                note={volumeRate > 0 ? `✅ Trailing 12m threshold met` : "⚠️ Below $52,500 threshold"}
+                value={formatTTD(volumeBonus)}
+                highlight={volumeRate > 0}
+              />
+              <Row
+                label={`Lives Bonus — Monthly Equivalent`}
+                note={livesRate > 0 ? `✅ ${livesRate * 100}% on annual FYC of ${formatTTD(annualFYC)}` : "⚠️ Need 80+ lives"}
+                value={formatTTD(livesBonusMonthly)}
+                highlight={livesRate > 0}
+              />
+
+              <div style={{ height: 1, background: COLORS.cardBorder, margin: "8px 0" }} />
+
+              <div style={{
+                background: "linear-gradient(135deg, #1e3a5f, #1a2a40)",
+                borderRadius: 10, padding: "16px",
+                border: `1px solid ${COLORS.accent}44`,
+                display: "flex", justifyContent: "space-between", alignItems: "center"
+              }}>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORS.muted, textTransform: "uppercase", letterSpacing: 1 }}>Total Monthly Earnings</div>
+                  <div style={{ fontSize: 11, color: COLORS.muted }}>(incl. lives bonus monthly equiv.)</div>
+                </div>
+                <div style={{ fontSize: 30, fontWeight: 900, color: COLORS.accent }}>{formatTTD(totalMonthly)}</div>
+              </div>
+
+              <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <Stat label="Annual Projection" value={formatTTD(totalMonthly * 12)} color={COLORS.accent} />
+                <Stat label="Lives Bonus (Jan payout)" value={formatTTD(livesBonus)} color={COLORS.green} sub="Paid Jan 31" />
+              </div>
+            </Section>
+
+            {/* Bonus unlock tips */}
+            {!hitMonthlyThreshold && (
+              <div style={{
+                background: "#7c3aed22", border: `1px solid #7c3aed44`,
+                borderRadius: 10, padding: 14, marginBottom: 16
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.purple, marginBottom: 4 }}>
+                  💡 Monthly Incentive Gap
+                </div>
+                <div style={{ fontSize: 12, color: COLORS.text }}>
+                  You need <strong style={{ color: COLORS.accentSoft }}>{formatTTD(35000 - monthlyBonusEligible)}</strong> more in commissions to unlock the Monthly Incentive Bonus — where renewals pay out at <strong>100%</strong>. This tier is transformational if your renewal book is large.
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* STRATEGY TAB */}
+        {tab === "strategy" && (
+          <>
+            <Section title="Priority Ranking — Where to Focus" color={COLORS.green}>
+              {[
+                {
+                  rank: 1, title: "Hit 120 New Lives", color: COLORS.green,
+                  why: "Lives Bonus applies 20% to your ENTIRE year's FYC — it's the highest-leverage multiplier. 120 lives vs 80 lives is an extra 5% on all annual commissions.",
+                  action: "Average 10 new policies/month. Prioritize volume over premium size for this metric."
+                },
+                {
+                  rank: 2, title: "Sustain $77k Trailing 12-Month", color: COLORS.blue,
+                  why: "Unlocks 20% Volume Bonus on your monthly FYC, paid quarterly. That's an automatic 20% raise on new business.",
+                  action: "Average $6,416/month in FYC. Front-load larger premium cases in early months to build the trailing total fast."
+                },
+                {
+                  rank: 3, title: "Target Monthly Incentive ($35k threshold)", color: COLORS.purple,
+                  why: "Once hit, renewals pay out at 100% bonus — meaning your growing renewal book becomes a bonus engine every month.",
+                  action: "This becomes more achievable as your renewal book grows in years 2-3. Plan for it now."
+                },
+                {
+                  rank: 4, title: "Stack Cashbuilder Add-Ons", color: COLORS.accent,
+                  why: "First Year Commissions are paid on additional Cashbuilder policies. Any existing client who qualifies = extra FYC with low acquisition cost.",
+                  action: "Review all active clients annually for Cashbuilder eligibility. This is free revenue on your existing book."
+                },
+              ].map(({ rank, title, color, why, action }) => (
+                <div key={rank} style={{
+                  background: COLORS.bg, borderRadius: 10, padding: 14,
+                  marginBottom: 10, border: `1px solid ${color}33`,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%", background: color,
+                      color: "#000", fontWeight: 900, fontSize: 13, display: "flex",
+                      alignItems: "center", justifyContent: "center", marginRight: 10, flexShrink: 0
+                    }}>{rank}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color }}>{title}</div>
+                  </div>
+                  <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 6, lineHeight: 1.5 }}>
+                    <strong style={{ color: COLORS.text }}>Why: </strong>{why}
+                  </div>
+                  <div style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.5 }}>
+                    <strong style={{ color: color }}>Action: </strong>{action}
+                  </div>
+                </div>
+              ))}
+            </Section>
+
+            <Section title="Submission Format — Best Practices" color={COLORS.accent}>
+              {[
+                { icon: "📅", title: "Submit Early in the Month", desc: "Policy must be delivered AND placed in force to earn commission. Submit at month start to ensure it settles within that billing cycle — delays push your FYC into the next month." },
+                { icon: "📋", title: "Complete Replacement Forms on the Spot", desc: "For any replacement, have the form signed by both you and the client at the point of sale. Missing forms = delayed or forfeited commissions on replacements." },
+                { icon: "🎯", title: "Track Lives Separately from Premium Volume", desc: "Lives Bonus is per policy count, not premium size. A $200/month policy and a $2,000/month policy both count as 1 life. Never undercount small policies." },
+                { icon: "📊", title: "Review Trailing 12-Month Running Total Monthly", desc: "Volume Bonus is computed on trailing 12 months. Know your number going into each month so you can push extra cases when you're near a threshold." },
+                { icon: "🔄", title: "Batch Cashbuilder Additions with Annual Reviews", desc: "When doing annual policy reviews, bring a Cashbuilder application to every meeting. This turns a retention call into a new FYC opportunity." },
+              ].map(({ icon, title, desc }) => (
+                <div key={title} style={{
+                  display: "flex", gap: 12, padding: "10px 0",
+                  borderBottom: `1px solid ${COLORS.cardBorder}`,
+                }}>
+                  <div style={{ fontSize: 20, flexShrink: 0 }}>{icon}</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 3 }}>{title}</div>
+                    <div style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.6 }}>{desc}</div>
+                  </div>
+                </div>
+              ))}
+            </Section>
+          </>
+        )}
+
+        {/* REPLACEMENTS TAB */}
+        {tab === "replacements" && (
+          <>
+            <Section title="Replacement Policy Rules" color={COLORS.accent}>
+              <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 14, lineHeight: 1.6 }}>
+                When replacing an existing policy, your FYC is restricted based on the age of the policy being replaced. Understand this table before every replacement.
+              </div>
+              {[
+                { range: "0 – 3 Years Old", pct: "0%", color: COLORS.red, verdict: "AVOID", note: "Zero commission on the replacement. Don't do it unless there's a strong client benefit argument — and even then, you earn nothing." },
+                { range: "3 – 8 Years Old", pct: "40%", color: COLORS.accent, verdict: "CAUTION", note: "You earn 40% of normal FYC. Only worth it if the client clearly benefits, or if you engineer a significant premium increase." },
+                { range: "Over 8 Years Old", pct: "80%", color: COLORS.green, verdict: "VIABLE", note: "You earn 80% of FYC. Pair with a $25+/month premium increase to earn 100% FYC on the increased portion." },
+              ].map(({ range, pct, color, verdict, note }) => (
+                <div key={range} style={{
+                  background: COLORS.bg, borderRadius: 10, padding: 14,
+                  marginBottom: 10, border: `1px solid ${color}33`,
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{range}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 20, fontWeight: 900, color }}>{pct}</span>
+                      <Badge text={verdict} color={color} />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.5 }}>{note}</div>
+                </div>
+              ))}
+            </Section>
+
+            <Section title="The Premium Increase Play" color={COLORS.green}>
+              <div style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.6, marginBottom: 12 }}>
+                Regardless of policy age, if the new policy premium exceeds the old one by <strong style={{ color: COLORS.accentSoft }}>at least $25/month</strong>, you earn <strong style={{ color: COLORS.green }}>FULL First Year Commission</strong> on the premium increase portion.
+              </div>
+
+              <div style={{
+                background: COLORS.highlight, borderRadius: 10, padding: 14,
+                border: `1px solid ${COLORS.blue}44`,
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.blue, marginBottom: 8 }}>Example — 5-Year-Old Policy</div>
+                <Row label="Old premium" value="$500/month" />
+                <Row label="New premium" value="$600/month" />
+                <Row label="Increase" value="$100/month" />
+                <div style={{ height: 1, background: COLORS.cardBorder, margin: "8px 0" }} />
+                <Row label="FYC on original $500 (40% rate)" value="40% of normal FYC" highlight />
+                <Row label="FYC on $100 increase (full rate)" value="100% of normal FYC" highlight />
+                <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 8, lineHeight: 1.5 }}>
+                  ✅ Always aim to increase the premium by at least $25/month when replacing any policy — it unlocks full commissions on the increase portion and significantly lifts your total earnings.
+                </div>
+              </div>
+            </Section>
+
+            <Section title="Replacement Checklist" color={COLORS.purple}>
+              {[
+                "✅ Confirm age of existing policy before submitting",
+                "✅ Calculate whether a $25+ premium increase is feasible",
+                "✅ Complete and sign Replacement Form with client at point of sale",
+                "✅ Attach replacement form to application — missing forms delay commissions",
+                "✅ Document client benefit clearly (Compliance Unit reviews replacements)",
+                "✅ Never replace a policy under 3 years old — earn zero and risk compliance flag",
+              ].map((item) => (
+                <div key={item} style={{ fontSize: 13, color: COLORS.text, padding: "7px 0", borderBottom: `1px solid ${COLORS.cardBorder}`, lineHeight: 1.5 }}>
+                  {item}
+                </div>
+              ))}
+            </Section>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
