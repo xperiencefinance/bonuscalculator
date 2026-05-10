@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Xperience Finance — Commission Optimizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #090e1a;
+    --card: #101724;
+    --border: #1a2840;
+    --accent: #f59e0b;
+    --accent2: #fbbf24;
+    --green: #10b981;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --text: #f0f4ff;
+    --muted: #56657d;
+    --highlight: #132035;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+  h1, h2, h3, .label { font-family: 'Syne', sans-serif; }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #0b1221 0%, #132035 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 20px 22px;
+  }
+  .header .eyebrow {
+    font-size: 10px; letter-spacing: 3px; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 6px; font-family: 'Syne', sans-serif;
+  }
+  .header h1 { font-size: 22px; font-weight: 800; color: var(--text); }
+  .header p { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px;
+    padding: 12px 20px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .tab-btn {
+    background: transparent; color: var(--muted);
+    border: none; border-radius: 8px 8px 0 0;
+    padding: 8px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'Syne', sans-serif;
+    letter-spacing: 0.3px; transition: all 0.2s;
+  }
+  .tab-btn.active { background: var(--accent); color: #000; }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  /* CONTENT */
+  .content { padding: 20px; max-width: 520px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* SECTION CARD */
+  .section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 14px;
+    font-family: 'Syne', sans-serif;
+  }
+
+  /* SLIDERS */
+  .slider-group { margin-bottom: 18px; }
+  .slider-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; margin-bottom: 6px; align-items: center;
+  }
+  .slider-val { font-size: 13px; font-weight: 700; }
+  input[type=range] {
+    width: 100%; height: 4px; border-radius: 2px;
+    outline: none; border: none; cursor: pointer;
+    -webkit-appearance: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; cursor: pointer;
+  }
+  .slider-fyc { accent-color: var(--accent); }
+  .slider-r2 { accent-color: var(--green); }
+  .slider-r3 { accent-color: var(--purple); }
+  .slider-fyc::-webkit-slider-thumb { background: var(--accent); }
+  .slider-r2::-webkit-slider-thumb { background: var(--green); }
+  .slider-r3::-webkit-slider-thumb { background: var(--purple); }
+
+  /* TOGGLE GROUPS */
+  .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .toggle-btn {
+    background: var(--highlight); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 14px; font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: 'Syne', sans-serif;
+    transition: all 0.15s;
+  }
+  .toggle-btn.active-blue { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .toggle-btn.active-green { background: var(--green); border-color: var(--green); color: #fff; }
+
+  /* ROW */
+  .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 10px; border-radius: 8px; margin-bottom: 3px;
+  }
+  .row.highlight { background: var(--highlight); border: 1px solid #3b82f633; }
+  .row-label { font-size: 13px; }
+  .row-note { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .row-val { font-size: 13px; font-weight: 700; }
+  .row.highlight .row-val { color: var(--accent2); }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 10px 0; }
+
+  /* TOTAL BOX */
+  .total-box {
+    background: linear-gradient(135deg, #132035, #0f1c2e);
+    border: 1px solid #f59e0b33;
+    border-radius: 10px; padding: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px;
+  }
+  .total-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: 'Syne', sans-serif; }
+  .total-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .total-val { font-size: 30px; font-weight: 900; color: var(--accent); font-family: 'Syne', sans-serif; }
+
+  /* STAT GRID */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .stat-box { text-align: center; background: var(--bg); border-radius: 10px; padding: 14px; border: 1px solid var(--border); }
+  .stat-val { font-size: 22px; font-weight: 800; font-family: 'Syne', sans-serif; }
+  .stat-label { font-size: 11px; margin-top: 2px; }
+  .stat-sub { font-size: 10px; color: var(--muted); }
+
+  /* ALERT BOX */
+  .alert { border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .alert-title { font-size: 12px; font-weight: 700; margin-bottom: 5px; font-family: 'Syne', sans-serif; }
+  .alert-body { font-size: 12px; line-height: 1.6; color: var(--text); }
+
+  /* STRATEGY CARDS */
+  .strat-card {
+    background: var(--bg); border-radius: 10px; padding: 14px;
+    margin-bottom: 10px;
+  }
+  .strat-head { display: flex; align-items: center; margin-bottom: 8px; gap: 10px; }
+  .rank-badge {
+    width: 28px; height: 28px; border-radius: 50%;
+    font-weight: 900; font-size: 13px; font-family: 'Syne', sans-serif;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    color: #000;
+  }
+  .strat-title { font-size: 14px; font-weight: 700; }
+  .strat-why, .strat-action { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 4px; }
+
+  /* BEST PRACTICE ITEMS */
+  .bp-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .bp-icon { font-size: 18px; flex-shrink: 0; padding-top: 2px; }
+  .bp-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; font-family: 'Syne', sans-serif; }
+  .bp-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* REPLACEMENT CARDS */
+  .rep-card { background: var(--bg); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+  .rep-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .rep-range { font-size: 13px; font-weight: 700; }
+  .rep-pct { font-size: 20px; font-weight: 900; font-family: 'Syne', sans-serif; }
+  .badge {
+    border-radius: 20px; padding: 2px 10px;
+    font-size: 10px; font-weight: 700; margin-left: 8px;
+    font-family: 'Syne', sans-serif;
+  }
+  .rep-note { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* CHECKLIST */
+  .checklist-item {
+    font-size: 13px; padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5;
+  }
+
+  /* THRESHOLD SUB */
+  .threshold-sub { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .divider-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); font-family: 'Syne', sans-serif; margin: 12px 0 6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">Xperience Finance</div>
+  <h1>Commission Optimizer</h1>
+  <p>Maximize your earnings across all bonus tiers</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('calculator', this)">💰 Calculator</button>
+  <button class="tab-btn" onclick="switchTab('strategy', this)">🎯 Strategy</button>
+  <button class="tab-btn" onclick="switchTab('replacements', this)">🔄 Replacements</button>
+</div>
+
+<div class="content">
+
+  <!-- CALCULATOR TAB -->
+  <div id="tab-calculator" class="tab-panel active">
+
+    <div class="section" style="border-left: 4px solid var(--blue)">
+      <div class="section-title" style="color: var(--blue)">Your Monthly Inputs</div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>First Year Commission (FYC)</span>
+          <span class="slider-val" style="color:var(--accent)" id="lbl-fyc">$5,000</span>
+        </div>
+        <input type="range" class="slider-fyc" min="0" max="50000" step="500" value="5000"
+               oninput="updateVal('fyc', this.value)" id="sl-fyc"/>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>2nd Year Renewal Income</span>
+          <span class="slider-val" style="color:var(--green)" id="lbl-r2">$8,000</span>
+        </div>
+        <input type="range" class="slider-r2" min="0" max="30000" step="500" value="8000"
+               oninput="updateVal('r2', this.value)" id="sl-r2"/>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>3rd Year Renewal Income</span>
+          <span class="slider-val" style="color:var(--purple)" id="lbl-r3">$6,000</span>
+        </div>
+        <input type="range" class="slider-r3" min="0" max="30000" step="500" value="6000"
+               oninput="updateVal('r3', this.value)" id="sl-r3"/>
+      </div>
+
+      <div class="divider"></div>
+      <div class="divider-label">Trailing 12-Month Total (Volume Bonus)</div>
+      <div class="toggle-group" id="tg-trailing">
+        <button class="toggle-btn" onclick="setToggle('trailing', 0, this)">Below $52.5k</button>
+        <button class="toggle-btn active-blue" onclick="setToggle('trailing', 52500, this)">$52,500+</button>
+        <button class="toggle-btn" onclick="setToggle('trailing', 77000, this)">$77,000+</button>
+      </div>
+
+      <div class="divider-label" style="margin-top:14px">Lives Target This Year</div>
+      <div class="toggle-group" id="tg-lives">
+        <button class="toggle-btn" onclick="setToggle('lives', 0, this)">Under 80</button>
+        <button class="toggle-btn active-green" onclick="setToggle('lives', 80, this)">80+ Lives</button>
+        <button class="toggle-btn" onclick="setToggle('lives', 120, this)">120+ Lives</button>
+      </div>
+    </div>
+
+    <div class="section" style="border-left: 4px solid var(--accent)">
+      <div class="section-title" style="color:var(--accent)">Monthly Earnings Breakdown</div>
+
+      <div class="row"><span class="row-label">First Year Commissions</span><span class="row-val" id="out-fyc">$5,000</span></div>
+      <div class="row"><span class="row-label">2nd Year Renewals</span><span class="row-val" id="out-r2">$8,000</span></div>
+      <div class="row"><span class="row-label">3rd Year Renewals</span><span class="row-val" id="out-r3">$6,000</span></div>
+
+      <div class="divider"></div>
+
+      <div class="row" id="row-monthly">
+        <div>
+          <div class="row-label">Monthly Incentive Bonus</div>
+          <div class="row-note" id="note-monthly"></div>
+        </div>
+        <span class="row-val" id="out-monthly">$0</span>
+      </div>
+
+      <div class="row" id="row-volume">
+        <div>
+          <div class="row-label" id="lbl-volume">Volume Bonus (0% on FYC)</div>
+          <div class="row-note" id="note-volume"></div>
+        </div>
+        <span class="row-val" id="out-volume">$0</span>
+      </div>
+
+      <div class="row" id="row-lives">
+        <div>
+          <div class="row-label">Lives Bonus — Monthly Equiv.</div>
+          <div class="row-note" id="note-lives"></div>
+        </div>
+        <span class="row-val" id="out-lives">$0</span>
+      </div>
+
+      <div class="total-box">
+        <div>
+          <div class="total-label">Total Monthly Earnings</div>
+          <div class="total-sub">incl. lives bonus monthly equiv.</div>
+        </div>
+        <div class="total-val" id="out-total">$19,000</div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--accent)" id="out-annual">$228,000</div>
+          <div class="stat-label">Annual Projection</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--green)" id="out-livesbonus">$0</div>
+          <div class="stat-label">Lives Bonus (Jan payout)</div>
+          <div class="stat-sub">Paid Jan 31</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert" id="alert-monthly" style="background:#7c3aed22; border:1px solid #7c3aed44; display:none">
+      <div class="alert-title" style="color:var(--purple)">💡 Monthly Incentive Gap</div>
+      <div class="alert-body" id="alert-monthly-text"></div>
+    </div>
+  </div>
+
+  <!-- STRATEGY TAB -->
+  <div id="tab-strategy" class="tab-panel">
+
+    <div class="section" style="border-left: 4px solid var(--green)">
+      <div class="section-title" style="color:var(--green)">Priority Ranking — Where to Focus</div>
+
+      <div class="strat-card" style="border:1px solid #10b98133">
+        <div class="strat-head">
+          <div class="rank-badge" style="background:var(--green)">1</div>
+          <div class="strat-title" style="color:var(--green)">Hit 120 New Lives</div>
+        </div>
+        <div class="strat-why"><strong style="color:var(--text)">Why: </strong>Lives Bonus applies 20% to your ENTIRE year's FYC — it's the highest-leverage multiplier. 120 vs 80 lives is an extra 5% on all annual commissions.</div>
+        <div class="strat-action" style="margin-top:6px"><strong style="color:var(--green)">Action: </strong>Average 10 new policies/month. Prioritize volume over premium size for this metric.</div>
+      </div>
+
+      <div class="strat-card" style="border:1px solid #3b82f633">
+        <div class="strat-head">
+          <div class="rank-badge" style="background:var(--blue)">2</div>
+          <div class="strat-title" style="color:var(--blue)">Sustain $77k Trailing 12-Month</div>
+        </div>
+        <div class="strat-why"><strong style="color:var(--text)">Why: </strong>Unlocks 20% Volume Bonus on your monthly FYC, paid quarterly. That's an automatic 20% raise on new business.</div>
+        <div class="strat-action" style="margin-top:6px"><strong style="color:var(--blue)">Action: </strong>Average $6,416/month in FYC. Front-load larger premium cases early to build the trailing total fast.</div>
+      </div>
+
+      <div class="strat-card" style="border:1px solid #8b5cf633">
+        <div class="strat-head">
+          <div class="rank-badge" style="background:var(--purple)">3</div>
+          <div class="strat-title" style="color:var(--purple)">Target Monthly Incentive ($35k)</div>
+        </div>
+        <div class="strat-why"><strong style="color:var(--text)">Why: </strong>Once hit, renewals pay out at 100% bonus — your growing renewal book becomes a passive income engine every month.</div>
+        <div class="strat-action" style="margin-top:6px"><strong style="color:var(--purple)">Action: </strong>This becomes more achievable as your book matures in years 2–3. Build toward it intentionally now.</div>
+      </div>
+
+      <div class="strat-card" style="border:1px solid #f59e0b33">
+        <div class="strat-head">
+          <div class="rank-badge" style="background:var(--accent)">4</div>
+          <div class="strat-title" style="color:var(--accent)">Stack Cashbuilder Add-Ons</div>
+        </div>
+        <div class="strat-why"><strong style="color:var(--text)">Why: </strong>First Year Commissions are paid on additional Cashbuilder policies. Existing clients who qualify = extra FYC with zero acquisition cost.</div>
+        <div class="strat-action" style="margin-top:6px"><strong style="color:var(--accent)">Action: </strong>Bring a Cashbuilder application to every annual review. Turns retention calls into FYC opportunities.</div>
+      </div>
+    </div>
+
+    <div class="section" style="border-left: 4px solid var(--accent)">
+      <div class="section-title" style="color:var(--accent)">Submission Format — Best Practices</div>
+
+      <div class="bp-item">
+        <div class="bp-icon">📅</div>
+        <div><div class="bp-title">Submit Early in the Month</div><div class="bp-desc">Policy must be delivered AND placed in force to earn commission. Submit at month start to ensure it settles within that billing cycle — delays push FYC into the next month.</div></div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-icon">📋</div>
+        <div><div class="bp-title">Complete Replacement Forms on the Spot</div><div class="bp-desc">For any replacement, have the form signed by both parties at point of sale. Missing forms = delayed or forfeited commissions.</div></div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-icon">🎯</div>
+        <div><div class="bp-title">Track Lives Separately from Premium Volume</div><div class="bp-desc">Lives Bonus is per policy count, not premium size. A $200/month and a $2,000/month policy both count as 1 life. Never undercount small policies.</div></div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-icon">📊</div>
+        <div><div class="bp-title">Review Trailing 12-Month Total Monthly</div><div class="bp-desc">Volume Bonus is computed on trailing 12 months. Know your number going into each month so you can push extra cases when near a threshold.</div></div>
+      </div>
+      <div class="bp-item" style="border:none">
+        <div class="bp-icon">🔄</div>
+        <div><div class="bp-title">Batch Cashbuilder Additions with Annual Reviews</div><div class="bp-desc">When doing annual policy reviews, bring a Cashbuilder application to every meeting. This turns a retention call into a new FYC opportunity.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPLACEMENTS TAB -->
+  <div id="tab-replacements" class="tab-panel">
+
+    <div class="section" style="border-left: 4px solid var(--accent)">
+      <div class="section-title" style="color:var(--accent)">Replacement Commission Scale</div>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:14px; line-height:1.6">When replacing an existing policy, your FYC is restricted based on the age of the policy being replaced.</p>
+
+      <div class="rep-card" style="border:1px solid #ef444433">
+        <div class="rep-head">
+          <span class="rep-range">0 – 3 Years Old</span>
+          <div style="display:flex;align-items:center">
+            <span class="rep-pct" style="color:var(--red)">0%</span>
+            <span class="badge" style="background:#ef444422;color:var(--red);border:1px solid #ef444444">AVOID</span>
+          </div>
+        </div>
+        <div class="rep-note">Zero commission on the replacement. Don't do it unless there's a strong client benefit — and even then, you earn nothing. Compliance will also flag these.</div>
+      </div>
+
+      <div class="rep-card" style="border:1px solid #f59e0b33">
+        <div class="rep-head">
+          <span class="rep-range">3 – 8 Years Old</span>
+          <div style="display:flex;align-items:center">
+            <span class="rep-pct" style="color:var(--accent)">40%</span>
+            <span class="badge" style="background:#f59e0b22;color:var(--accent);border:1px solid #f59e0b44">CAUTION</span>
+          </div>
+        </div>
+        <div class="rep-note">You earn 40% of normal FYC. Only worth it if the client clearly benefits, or if you engineer a significant premium increase on the new policy.</div>
+      </div>
+
+      <div class="rep-card" style="border:1px solid #10b98133">
+        <div class="rep-head">
+          <span class="rep-range">Over 8 Years Old</span>
+          <div style="display:flex;align-items:center">
+            <span class="rep-pct" style="color:var(--green)">80%</span>
+            <span class="badge" style="background:#10b98122;color:var(--green);border:1px solid #10b98144">VIABLE</span>
+          </div>
+        </div>
+        <div class="rep-note">You earn 80% of FYC. Pair with a $25+/month premium increase to earn 100% FYC on the increased portion — significantly lifting your total earnings.</div>
+      </div>
+    </div>
+
+    <div class="section" style="border-left: 4px solid var(--green)">
+      <div class="section-title" style="color:var(--green)">The Premium Increase Play</div>
+      <p style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">
+        Regardless of policy age, if the new policy premium exceeds the old one by <strong style="color:var(--accent2)">at least $25/month</strong>, you earn <strong style="color:var(--green)">FULL First Year Commission</strong> on the increase portion.
+      </p>
+      <div style="background:var(--highlight);border-radius:10px;padding:14px;border:1px solid #3b82f633">
+        <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;font-family:'Syne',sans-serif">Example — 5-Year-Old Policy</div>
+        <div class="row"><span class="row-label">Old premium</span><span class="row-val">$500/month</span></div>
+        <div class="row"><span class="row-label">New premium</span><span class="row-val">$600/month</span></div>
+        <div class="row"><span class="row-label">Increase</span><span class="row-val" style="color:var(--green)">$100/month</span></div>
+        <div class="divider"></div>
+        <div class="row highlight"><span class="row-label">FYC on $500 base (40% restricted)</span><span class="row-val">40% rate</span></div>
+        <div class="row highlight"><span class="row-label">FYC on $100 increase</span><span class="row-val">100% rate ✅</span></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5">Always aim to increase the premium by at least $25/month when replacing any policy — it unlocks full commissions on the increase and significantly lifts total earnings.</p>
+      </div>
+    </div>
+
+    <div class="section" style="border-left: 4px solid var(--purple)">
+      <div class="section-title" style="color:var(--purple)">Replacement Checklist</div>
+      <div class="checklist-item">✅ Confirm age of existing policy before submitting</div>
+      <div class="checklist-item">✅ Calculate whether a $25+ premium increase is feasible</div>
+      <div class="checklist-item">✅ Complete and sign Replacement Form with client at point of sale</div>
+      <div class="checklist-item">✅ Attach replacement form to application — missing forms delay commissions</div>
+      <div class="checklist-item">✅ Document client benefit clearly (Compliance Unit reviews all replacements)</div>
+      <div class="checklist-item" style="border:none">✅ Never replace a policy under 3 years old — zero earnings and risk compliance flag</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // State
+  const state = {
+    fyc: 5000, r2: 8000, r3: 6000,
+    trailing: 52500, lives: 80
+  };
+
+  function fmt(n) {
+    return '$' + Math.round(n).toLocaleString();
+  }
+
+  function updateVal(key, val) {
+    val = Number(val);
+    state[key] = val;
+    const colors = { fyc: 'var(--accent)', r2: 'var(--green)', r3: 'var(--purple)' };
+    document.getElementById('lbl-' + key).textContent = fmt(val);
+    recalc();
+  }
+
+  function setToggle(group, val, btn) {
+    state[group] = val;
+    const activeClass = group === 'lives' ? 'active-green' : 'active-blue';
+    document.querySelectorAll('#tg-' + group + ' .toggle-btn').forEach(b => b.classList.remove('active-blue', 'active-green'));
+    btn.classList.add(activeClass);
+    recalc();
+  }
+
+  function recalc() {
+    const { fyc, r2, r3, trailing, lives } = state;
+
+    // Monthly Incentive Bonus
+    const eligible = fyc + r2 + r3;
+    const hitMonthly = eligible >= 35000;
+    const monthlyBonus = hitMonthly ? (fyc * 0.15 + r2 * 1.0 + r3 * 1.0) : 0;
+
+    // Volume Bonus
+    const volRate = trailing >= 77000 ? 0.20 : trailing >= 52500 ? 0.15 : 0;
+    const volumeBonus = fyc * volRate;
+
+    // Lives Bonus
+    const livesRate = lives >= 120 ? 0.20 : lives >= 80 ? 0.15 : 0;
+    const annualFYC = fyc * 12;
+    const livesBonus = annualFYC * livesRate;
+    const livesBonusMonthly = livesBonus / 12;
+
+    const total = fyc + r2 + r3 + monthlyBonus + volumeBonus + livesBonusMonthly;
+
+    // Update DOM
+    document.getElementById('out-fyc').textContent = fmt(fyc);
+    document.getElementById('out-r2').textContent = fmt(r2);
+    document.getElementById('out-r3').textContent = fmt(r3);
+
+    // Monthly incentive
+    const rowM = document.getElementById('row-monthly');
+    document.getElementById('out-monthly').textContent = fmt(monthlyBonus);
+    document.getElementById('note-monthly').textContent = hitMonthly
+      ? `✅ Threshold met (${fmt(eligible)} ≥ $35,000)`
+      : `⚠️ Need ${fmt(35000 - eligible)} more to unlock`;
+    rowM.className = 'row' + (hitMonthly ? ' highlight' : '');
+
+    // Volume bonus
+    const rowV = document.getElementById('row-volume');
+    document.getElementById('lbl-volume').textContent = `Volume Bonus (${Math.round(volRate * 100)}% on FYC)`;
+    document.getElementById('out-volume').textContent = fmt(volumeBonus);
+    document.getElementById('note-volume').textContent = volRate > 0
+      ? '✅ Trailing 12m threshold met'
+      : '⚠️ Below $52,500 threshold';
+    rowV.className = 'row' + (volRate > 0 ? ' highlight' : '');
+
+    // Lives bonus
+    const rowL = document.getElementById('row-lives');
+    document.getElementById('out-lives').textContent = fmt(livesBonusMonthly);
+    document.getElementById('note-lives').textContent = livesRate > 0
+      ? `✅ ${Math.round(livesRate * 100)}% on annual FYC of ${fmt(annualFYC)}`
+      : '⚠️ Need 80+ lives for this bonus';
+    rowL.className = 'row' + (livesRate > 0 ? ' highlight' : '');
+
+    document.getElementById('out-total').textContent = fmt(total);
+    document.getElementById('out-annual').textContent = fmt(total * 12);
+    document.getElementById('out-livesbonus').textContent = fmt(livesBonus);
+
+    // Gap alert
+    const alertEl = document.getElementById('alert-monthly');
+    if (!hitMonthly) {
+      alertEl.style.display = 'block';
+      document.getElementById('alert-monthly-text').innerHTML =
+        `You need <strong style="color:var(--accent2)">${fmt(35000 - eligible)}</strong> more in commissions to unlock the Monthly Incentive Bonus — where renewals pay out at <strong>100%</strong>. This tier is transformational once your renewal book matures.`;
+    } else {
+      alertEl.style.display = 'none';
+    }
+  }
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // Init
+  recalc();
+</script>
+</body>
+</html>
